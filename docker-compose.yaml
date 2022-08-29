@@ -1,0 +1,25 @@
+version: "3.3"
+services:
+  main_service:
+    build: .
+    container_name: main_service
+    environment:
+      HOST: '0.0.0.0'
+      PORT: 8000
+      PRIVATE_KEY: 'DASDASFFasd'
+    depends_on:
+      - database
+    entrypoint: ['./wait-for-db.sh', 'database:5432', '--', './entrypoint.sh']
+    ports:
+      - 8000:8000
+
+  database:
+    image: postgres:13.3
+    container_name: service_database
+    environment:
+      POSTGRES_DB: "dimatech"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: 'root'
+      PGDATA: '/var/lib/postgresql/data/pgdata'
+    volumes:
+      - .:/var/lib/postgresql/data
