@@ -16,3 +16,4 @@ docker-compose up
 7) Обработку ошибок
 8) Добавить много тестов
 9) Добавить Optimistic Lock для транзакций
+10) Поправить CheckConstraints (alembic не поддерживает)

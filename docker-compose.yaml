@@ -4,14 +4,13 @@ services:
     build: .
     container_name: main_service
     environment:
-      HOST: '0.0.0.0'
-      PORT: 8000
-      PRIVATE_KEY: 'DASDASFFasd'
+      DB_URI: 'postgresql+asyncpg://postgres:root@database:5432/dimatech'
+      PRIVATE_KEY: 'private_key'
     depends_on:
       - database
     entrypoint: ['./wait-for-db.sh', 'database:5432', '--', './entrypoint.sh']
     ports:
-      - 8000:8000
+      - "8000:8000"
 
   database:
     image: postgres:13.3

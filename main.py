@@ -11,11 +11,11 @@ from db.models import Users
 app = Sanic('dimatech_test')
 app.error_handler = error_handler
 app.router = router
-Initialize(app, authenticate=auth.jwt_auth,
+Initialize(app, secret=Config.PRIVATE_KEY, authenticate=auth.jwt_auth,
            class_views=(('/register', auth.Register),
                         ('/register/verify', auth.VerifyUser)),
-           retrieve_user=auth.retrieve_user,
-           custom_claims=[auth.AdminClaim])
+           custom_claims=[auth.AdminClaim, auth.ActiveClaim],
+           retrieve_user=auth.retrieve_user)
 
 
 @app.before_server_start
@@ -26,12 +26,10 @@ async def create_admin(*args, **kwargs):
         data = (await session.execute(stmt)).first()
         if data:
             return
-        stmt = insert(Users).values(login='admin', password='root', is_active=True, admin=True).returning(Users)
+        stmt = insert(Users).values(login=Config.ADMIN_LOGIN, password=Config.ADMIN_PASSWORD,
+                                    is_active=True, admin=True).returning(Users)
         admin = (await session.execute(stmt)).first()
-        print(admin)
 
         await session.commit()
 
-
-# Добавить Config
-app.run(host=Config.host, port=Config.port)
+app.run(host='0.0.0.0', port=8000)

@@ -35,7 +35,7 @@ class Products(Base):
 class Accounts(Base):
     __tablename__ = 'accounts'
     id = Column('id', Integer, primary_key=True, index=True)
-    balance = Column('balance', Float, CheckConstraint('balance >= 0.0'), default=0.0)  # Constraint >0 добавить
+    balance = Column('balance', Float, CheckConstraint('balance >= 0.0'), default=0.0)
     user_id = Column('user_id', Integer, ForeignKey("users.id"))
     transactions = relationship('Transactions')
 

@@ -1,25 +1,45 @@
 from sanic.response import HTTPResponse, json
 from sanic.request import Request
-from serializers.schemas import RegisterSchema, UserSchema
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.engine import engine
 from db.models import Users
 from sqlalchemy import select, insert, update
-from sqlalchemy.exc import IntegrityError
 from sanic_jwt.exceptions import AuthenticationFailed
-from sanic_jwt import BaseEndpoint
+from sanic_jwt import BaseEndpoint, Claim
+
+
+class AdminClaim(Claim):
+    key = 'admin'
+
+    @staticmethod
+    def setup(payload, user):
+        return user.get('admin', False)
+
+    def verify(self, value):
+        return True
+
+
+class ActiveClaim(Claim):
+    key = 'is_active'
+
+    @staticmethod
+    def setup(payload, user):
+        return user.get('is_active', False)
+
+    def verify(self, value):
+        return True
 
 
 class Register(BaseEndpoint):
-    async def post(self, request):
+    async def post(self, request: Request) -> HTTPResponse:
         body = request.json
         login, password = body.get('login'), body.get('password')
         if not (login or password):
             raise AuthenticationFailed("Missing username or password")
         async_session = sessionmaker(engine, AsyncSession)
         get_user = select(Users.id, Users.password).filter(Users.login == login)
-        create_user = insert(Users).values(login=login, password=password)
+        create_user = insert(Users).values(login=login, password=password, is_active=False, admin=False)
         async with async_session() as session:
             data = (await session.execute(get_user)).first()
             if data is not None:
@@ -32,7 +52,7 @@ class Register(BaseEndpoint):
 
 
 class VerifyUser(BaseEndpoint):
-    async def post(self, request):
+    async def post(self, request: Request) -> HTTPResponse:
         body = request.json
         login, password = body.get('login'), body.get('password')
         if not (login or password):
@@ -59,22 +79,8 @@ class VerifyUser(BaseEndpoint):
         return json({login: 'verified'})
 
 
-async def retrieve_user(request, payload, *args, **kwargs):
+async def retrieve_user(request: Request, payload: dict):
     return payload
-
-
-from sanic_jwt import Claim, Initialize
-
-
-class AdminClaim(Claim):
-    key = 'admin'
-
-    @staticmethod
-    def setup(payload, user):
-        return user.get('admin', False)
-
-    def verify(self, value):
-        return True
 
 
 async def jwt_auth(request: Request) -> dict:
@@ -94,4 +100,4 @@ async def jwt_auth(request: Request) -> dict:
             raise AuthenticationFailed("Wrong password")
         await session.commit()
 
-    return {'user_id': db_id, 'password': db_password, 'admin': db_admin}
+    return {'user_id': db_id, 'password': db_password, 'admin': db_admin, 'is_active': False}

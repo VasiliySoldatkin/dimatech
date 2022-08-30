@@ -5,14 +5,14 @@ from sanic_jwt import inject_user, protected
 from utils.auth import check_permission
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker, contains_eager
-from sqlalchemy import select
+from sqlalchemy import select, update
 from db.engine import engine
 
 
 @check_permission()
 @inject_user()
 @protected()
-async def get_users_with_accounts(request: Request, user: dict) -> HTTPResponse:
+async def get_users_with_accounts(request: Request, **kwargs) -> HTTPResponse:
     async_session = sessionmaker(engine, class_=AsyncSession)
     stmt = select(Users).join(Users.accounts).options(contains_eager(Users.accounts))
     result = []
@@ -31,8 +31,13 @@ async def get_users_with_accounts(request: Request, user: dict) -> HTTPResponse:
 
 @check_permission()
 @inject_user()
-# @protected()
-async def control_users(request: Request, user: dict) -> HTTPResponse:
-    body = request.json
-    # 3. Включать/отключать пользователей (переназвать функцию) (админ)
-    ...
+@protected()
+async def control_user(request: Request, user_id, activation, **kwargs) -> HTTPResponse:
+    stmt = update(Users).filter(Users.id == user_id).values(is_active=activation == 'enable').returning(Users)
+    async_session = sessionmaker(engine, AsyncSession)
+    async with async_session() as session:
+        result = (await session.execute(stmt)).first()
+        if not result:
+            return json({'error': "this user doesn't exists"}, status=400)
+        await session.commit()
+    return json(result)
