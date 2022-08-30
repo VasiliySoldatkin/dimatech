@@ -2,7 +2,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, SmallInteger, String, Float, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy import CheckConstraint
-from sqlalchemy_utils import ChoiceType
 
 Base = declarative_base()
 
@@ -29,6 +28,7 @@ class Products(Base):
     __tablename__ = 'products'
     id = Column('id', Integer, primary_key=True, autoincrement=True, index=True)
     title = Column('title', String(100), index=True)
+    description = Column('description', String(1000))
     price = Column('price', Float)
 
 

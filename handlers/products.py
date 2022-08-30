@@ -17,7 +17,6 @@ class ProductsView(HTTPMethodView):
     decorators = [protected(), inject_user(), check_permission()]
 
     async def patch(self, request: Request, product_id, **kwargs) -> HTTPResponse:
-        # Редактировать товары
         data = ProductSchema().load(request.json)
         async_session = sessionmaker(engine, class_=AsyncSession)
         update_product = update(Products).filter(Products.id == product_id).values(data)
@@ -27,7 +26,6 @@ class ProductsView(HTTPMethodView):
         return json({'OK': True})
 
     async def get(self, request: Request, product_id: Optional[int] = None, **kwargs) -> HTTPResponse:
-        # Получить все товары (админ)
         schema = ProductSchema()
         async_session = sessionmaker(engine, class_=AsyncSession)
         result = []
@@ -41,7 +39,6 @@ class ProductsView(HTTPMethodView):
         return json(result)
 
     async def post(self, request: Request, user: dict) -> HTTPResponse:
-        # Создавать товары (админ)
         result = ProductSchema().load(request.json)
         async_session = sessionmaker(engine, class_=AsyncSession)
         async with async_session() as session, session.begin():
@@ -49,7 +46,6 @@ class ProductsView(HTTPMethodView):
         return json({'OK': True})
 
     async def delete(self, request: Request, product_id, **kwargs) -> HTTPResponse:
-        # Удалять товары (админ)
         async_session = sessionmaker(engine, class_=AsyncSession)
         async with async_session() as session, session.begin():
             await session.execute(delete(Products).filter(Products.id == product_id))

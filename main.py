@@ -1,6 +1,7 @@
 from sanic import Sanic
 from sanic_jwt import Initialize
 from handlers import router, error_handler, auth
+from handlers import admin_bp, my_bp
 from config import Config
 from db.engine import engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,9 +12,11 @@ from db.models import Users
 app = Sanic('dimatech_test')
 app.error_handler = error_handler
 app.router = router
+app.blueprint(admin_bp)
+app.blueprint(my_bp)
 Initialize(app, secret=Config.PRIVATE_KEY, authenticate=auth.jwt_auth,
-           class_views=(('/register', auth.Register),
-                        ('/register/verify', auth.VerifyUser)),
+           class_views=(('/register', auth.Register), # Регистрация и возвращение ссылки активации
+                        ('/register/verify', auth.VerifyUser)), # Активация аккаунта
            custom_claims=[auth.AdminClaim, auth.ActiveClaim],
            retrieve_user=auth.retrieve_user)
 

@@ -4,6 +4,7 @@ from marshmallow.validate import Length
 
 class ProductSchema(Schema):
     title = fields.String(required=True)
+    description = fields.String(default='Empty Description')
     price = fields.Float(required=True)
 
     @validates('price')
